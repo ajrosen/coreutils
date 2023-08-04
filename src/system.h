@@ -241,6 +241,7 @@ struct group *getgrgid (gid_t);
 uid_t getuid (void);
 #endif
 
+#include "idx.h"
 #include "xalloc.h"
 #include "verify.h"
 
@@ -762,6 +763,17 @@ The following directory is part of the cycle:\n  %s\n"), \
     }					\
   while (0)
 
+/* exit with a _single_ "write error" diagnostic.  */
+
+static inline void
+write_error (void)
+{
+  int saved_errno = errno;
+  fflush (stdout);    /* Ensure nothing buffered that might induce an error. */
+  clearerr (stdout);  /* To avoid extraneous diagnostic from close_stdout.  */
+  error (EXIT_FAILURE, saved_errno, _("write error"));
+}
+
 /* Like stpncpy, but do ensure that the result is NUL-terminated,
    and do not NUL-pad out to LEN.  I.e., when strnlen (src, len) == len,
    this function writes a NUL byte into dest[len].  Thus, the length
@@ -770,8 +782,8 @@ The following directory is part of the cycle:\n  %s\n"), \
 static inline char *
 stzncpy (char *restrict dest, char const *restrict src, size_t len)
 {
-  char const *src_end = src + len;
-  while (src < src_end && *src)
+  size_t i;
+  for (i = 0; i < len && *src; i++)
     *dest++ = *src++;
   *dest = 0;
   return dest;

@@ -19,6 +19,11 @@ GNU coreutils NEWS                                    -*- outline -*-
   cksum again diagnoses read errors in its default CRC32 mode.
   [bug introduced in coreutils-9.0]
 
+  'cksum --check' now ensures filenames with a leading backslash character
+  are escaped appropriately in the status output.
+  This also applies to the standalone checksumming utilities.
+  [bug introduced in coreutils-8.25]
+
   dd again supports more than two multipliers for numbers.
   Previously numbers of the form '1024x1024x32' gave "invalid number" errors.
   [bug introduced in coreutils-9.1]
@@ -34,8 +39,19 @@ GNU coreutils NEWS                                    -*- outline -*-
   Previously a "Too many levels of symbolic links" diagnostic was given.
   [This bug was present in "the beginning".]
 
+  pinky, uptime, users, and who no longer misbehave on 32-bit GNU/Linux
+  platforms like x86 and ARM where time_t was historically 32 bits.
+  [bug introduced in coreutils-9.0]
+
   'pr --length=1 --double-space' no longer enters an infinite loop.
   [This bug was present in "the beginning".]
+
+  tac now handles short reads on its input.  Previously it may have exited
+  erroneously, especially with large input files with no separators.
+  [This bug was present in "the beginning".]
+
+  'uptime' no longer incorrectly prints "0 users" on OpenBSD.
+  [bug introduced in coreutils-9.2]
 
   'wc -l' and 'cksum' no longer crash with an "Illegal instruction" error
   on x86 Linux kernels that disable XSAVE YMM.  This was seen on Xen VMs.
@@ -51,14 +67,28 @@ GNU coreutils NEWS                                    -*- outline -*-
   short option is reserved to better support emulation of the standalone
   checksum utilities with cksum.
 
+  'mv dir x' now complains differently if x/dir is a nonempty directory.
+  Previously it said "mv: cannot move 'dir' to 'x/dir': Directory not empty",
+  where it was unclear whether 'dir' or 'x/dir' was the problem.
+  Now it says "mv: cannot overwrite 'x/dir': Directory not empty".
+  Similarly for other renames where the destination must be the problem.
+  [problem introduced in coreutils-6.0]
+
 ** Improvements
 
   cp, mv, and install now avoid copy_file_range on linux kernels before 5.3
   irrespective of which kernel version coreutils is built against,
   reinstating that behaviour from coreutils-9.0.
 
+  comm, cut, join, od, and uniq will now exit immediately upon receiving a
+  write error, which is significant when reading large / unbounded inputs.
+
   split now uses more tuned access patterns for its potentially large input.
   This was seen to improve throughput by 5% when reading from SSD.
+
+  split now supports a configurable $TMPDIR for handling any temporary files.
+
+  tac now falls back to '/tmp' if a configured $TMPDIR is unavailable.
 
 
 * Noteworthy changes in release 9.3 (2023-04-18) [stable]

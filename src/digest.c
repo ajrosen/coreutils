@@ -560,6 +560,18 @@ or equivalent standalone program.\
   exit (status);
 }
 
+/* Given a string S, return TRUE if it contains problematic characters
+   that need escaping.  Note we escape '\' itself to provide some forward
+   compat to introduce escaping of other characters.  */
+
+ATTRIBUTE_PURE
+static bool
+problematic_chars (char const *s)
+{
+  size_t length = strcspn (s, "\\\n\r");
+  return s[length] != '\0';
+}
+
 #define ISWHITE(c) ((c) == ' ' || (c) == '\t')
 
 /* Given a file name, S of length S_LEN, that is not NUL-terminated,
@@ -646,7 +658,7 @@ valid_digits (unsigned char const *s, size_t len)
 #endif
   if (len == digest_hex_bytes)
     {
-      for (unsigned int i = 0; i < digest_hex_bytes; i++)
+      for (idx_t i = 0; i < digest_hex_bytes; i++)
         {
           if (!isxdigit (*s))
             return false;
@@ -1029,12 +1041,9 @@ output_file (char const *file, int binary_file, void const *digest,
 
   unsigned char const *bin_buffer = digest;
 
-  /* Output a leading backslash if the file name contains problematic chars.
-     Note we escape '\' itself to provide some forward compat to introduce
-     escaping of other characters.  */
-  bool needs_escape = delim == '\n' && (strchr (file, '\\')
-                                        || strchr (file, '\n')
-                                        || strchr (file, '\r'));
+  /* Output a leading backslash if the file name contains problematic chars.  */
+  bool needs_escape = delim == '\n' && problematic_chars (file);
+
   if (needs_escape)
     putchar ('\\');
 
@@ -1206,9 +1215,7 @@ digest_check (char const *checkfile_name)
         {
           bool ok;
           bool missing;
-          /* Only escape in the edge case producing multiple lines,
-             to ease automatic processing of status output.  */
-          bool needs_escape = ! status_only && strchr (filename, '\n');
+          bool needs_escape = ! status_only && problematic_chars (filename);
 
           properly_formatted_lines = true;
 
